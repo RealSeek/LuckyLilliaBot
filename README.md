@@ -10,6 +10,8 @@
 ## Document
 <https://luckylillia.com>
 
+自部署签名服务：通过 `LLBOT_SIGN_URL` 配置，首版支持 Linux QQ 协议，详见[接口与部署说明](doc/custom-sign-server.md)。
+
 ## References
 
 [LagrangeV2](https://github.com/LagrangeDev/LagrangeV2)

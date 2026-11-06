@@ -54,6 +54,8 @@ vi.mock('@/main/qqProtocol/direct-lib/session', () => ({
 }))
 
 vi.mock('@/main/qqProtocol/direct-lib/sign', () => ({
+  customSign: null,
+  CUSTOM_SIGN_TOKEN: 'self-hosted-linux',
   requestSign: vi.fn(),
   setupSign: vi.fn(),
   setSignMachineGuid: vi.fn(),

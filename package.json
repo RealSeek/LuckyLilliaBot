@@ -15,6 +15,7 @@
     "check:webui": "npm --prefix src/webui/FE run check",
     "test:webui": "vitest run --config vitest.config.ts 'test/webui'",
     "test:unit": "vitest run --config vitest.config.ts 'test/unit'",
+    "test:sign-http": "node --test test/sign-http.test.ts",
     "test": "vitest run --config vitest.config.ts"
   },
   "author": "",

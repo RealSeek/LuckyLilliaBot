@@ -3,6 +3,7 @@ import { isPmhqMode, getAuthTokenPageUrl } from '@/common/utils/environment'
 import { authTokenUtil } from '../../../main/config'
 import { authTokenStatus, selfInfo } from '@/common/globalVars'
 import { triggerAuthTokenCheck } from '../../../main/qqProtocol/direct-lib/authTokenWatcher'
+import { customSign } from '../../../main/qqProtocol/direct-lib/sign'
 
 // QQ sign auth token 的查询/录入, 在 authMiddleware(WebUI 密码)之后.
 // 录入接口只写文件, 不做校验; 校验与登录由后端 authTokenWatcher 监听文件变化触发.
@@ -14,7 +15,7 @@ export function createAuthTokenRoutes(): Hono {
     return c.json({
       success: true,
       data: {
-        applicable: !isPmhqMode(),
+        applicable: !isPmhqMode() && !customSign,
         online: selfInfo.online,
         hasToken: authTokenStatus.hasToken,
         validation: authTokenStatus.validation,

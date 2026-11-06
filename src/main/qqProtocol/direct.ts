@@ -23,7 +23,7 @@ import type { QrCodeResult, QrPollResult } from './direct-lib'
 import { getCdn, getAuthTokenPageUrl } from '@/common/utils/environment'
 import { overwriteMachineGuid } from './direct-lib/machineGuid'
 import { getActiveProfile } from './direct-lib/profiles'
-import { updateAuthToken } from './direct-lib/sign'
+import { updateAuthToken, customSign, CUSTOM_SIGN_TOKEN } from './direct-lib/sign'
 import { authTokenUtil } from '../config'
 import { setLoginState } from '../llbot-ipc'
 import { version } from '../../version'
@@ -213,7 +213,7 @@ export class DirectQQProtocol extends QQProtocolBase {
    */
   private scheduleReconnect(attempt = 0) {
     if (this.reconnectTimer || selfInfo.online) return
-    if (!(authTokenUtil.reload() || process.env.AUTH_TOKEN || '').trim()) return
+    if (!customSign && !(authTokenUtil.reload() || process.env.AUTH_TOKEN || '').trim()) return
     const delay = Math.min(DirectQQProtocol.RECONNECT_MS * 2 ** attempt, DirectQQProtocol.RECONNECT_MAX_MS)
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectTimer = null
@@ -242,7 +242,7 @@ export class DirectQQProtocol extends QQProtocolBase {
   private async initDirectClient(tokenArg?: string): Promise<void> {
     // 优先用调用方 (watcher) 已校验过的 token; 没传才回退读文件. 保证交给 native sign 的
     // 就是 validateAuthToken 校验通过的那一份, 不因期间文件被外部改写而分叉.
-    let authToken = (tokenArg || authTokenUtil.reload() || process.env.AUTH_TOKEN || '').trim()
+    let authToken = customSign ? CUSTOM_SIGN_TOKEN : (tokenArg || authTokenUtil.reload() || process.env.AUTH_TOKEN || '').trim()
     if (!authToken) {
       const tokenPath = authTokenUtil.getPath()
       this.logger.warn(

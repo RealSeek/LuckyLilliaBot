@@ -1,6 +1,6 @@
 import { watchFile } from 'node:fs'
 import { authTokenUtil } from '../../config'
-import { validateAuthToken } from './sign'
+import { validateAuthToken, customSign, CUSTOM_SIGN_TOKEN } from './sign'
 import { authTokenStatus, selfInfo } from '@/common/globalVars'
 import { getAuthTokenPageUrl } from '@/common/utils/environment'
 
@@ -65,7 +65,7 @@ async function processTokenFile(): Promise<void> {
 
 async function processOnce(): Promise<void> {
   // 文件优先, 回退 AUTH_TOKEN env (兼容 -e AUTH_TOKEN=... 的 docker 部署)
-  const token = authTokenUtil.reload() || (process.env.AUTH_TOKEN || '').trim()
+  const token = customSign ? CUSTOM_SIGN_TOKEN : authTokenUtil.reload() || (process.env.AUTH_TOKEN || '').trim()
   if (!token) {
     lastValidToken = ''
     authTokenStatus.hasToken = false
@@ -98,7 +98,7 @@ async function processOnce(): Promise<void> {
     authTokenStatus.message = ''
     authTokenStatus.loginError = '' // 新的有效 token, 清掉上一次的登录错误
     lastValidToken = token
-    log.info('[Sign] auth_token 校验通过, 开始登录流程')
+    log.info(customSign ? '[Sign] 自定义签名服务检查通过, 开始登录流程' : '[Sign] auth_token 校验通过, 开始登录流程')
     try {
       await onValidCb(token)
     } catch {
@@ -119,13 +119,15 @@ async function processOnce(): Promise<void> {
   } else {
     // 网络错误: 无法判定, 不冒险登录; 定时重试 (验证服务恢复后自动继续)
     authTokenStatus.validation = 'error'
-    authTokenStatus.message = '无法连接验证服务器（网络问题），将自动重试'
+    authTokenStatus.message = customSign
+      ? `自定义签名服务检查失败，将自动重试: ${result instanceof Error ? result.message : result}`
+      : '无法连接验证服务器（网络问题），将自动重试'
     if (result instanceof Error) {
-      log.warn('[Sign]', result.cause)
+      log.warn('[Sign]', result)
     } else {
       log.warn('[Sign] status code', result)
     }
-    log.warn('[Sign] auth_token 校验网络失败, 15s 后重试')
+    log.warn(customSign ? '[Sign] 自定义签名服务检查失败, 15s 后重试' : '[Sign] auth_token 校验网络失败, 15s 后重试')
     scheduleRetry()
   }
 }

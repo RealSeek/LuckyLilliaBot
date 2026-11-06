@@ -4,6 +4,7 @@ import { getCdn, getProtocol } from '@/common/utils/environment'
 import { loadMachineGuidSync } from './machineGuid'
 import { device32FromGuid } from './watch/device32'
 import { getMacosDevice } from './macosDevice'
+import { HttpSignClient } from './httpSign'
 import {
   getSignProxy,
   type RelayPacket,
@@ -12,6 +13,15 @@ import {
 
 const logger = getLogger('sign')
 import { authTokenStatus } from '@/common/globalVars'
+
+const signUrl = process.env.LLBOT_SIGN_URL?.trim()
+export const customSign = signUrl ? new HttpSignClient(signUrl) : null
+if (customSign && getProtocol() !== 'linux') {
+  throw new Error('LLBOT_SIGN_URL currently supports only the Linux QQ protocol')
+}
+
+// Internal marker for existing client lifecycle checks; never sent as HTTP authentication.
+export const CUSTOM_SIGN_TOKEN = 'self-hosted-linux'
 
 export interface SignResult {
   sign: Buffer
@@ -41,12 +51,15 @@ export async function setupSign(opts: {
     throw new Error(`setupSign expected 16B machineGuid, got ${opts.machineGuid.length}B`)
   }
   try {
+    if (customSign && typeof getSignProxy().getLinuxSAToken !== 'function') {
+      throw new Error('Custom Linux signing requires a native build with getLinuxSAToken')
+    }
     await getSignProxy().init(
       {
         botVersion: opts.botVersion,
-        authToken: opts.authToken,
+        authToken: customSign ? CUSTOM_SIGN_TOKEN : opts.authToken,
         machineGuidHex: opts.machineGuid.toString('hex'),
-        uin: opts.uin,
+        uin: customSign ? undefined : opts.uin,
         cdn: opts.cdn,
       },
       opts.sendPacket,
@@ -83,12 +96,14 @@ function defaultLogger(log: SignLog): void {
 }
 
 export async function updateAuthToken(authToken: string): Promise<void> {
+  if (customSign) return
   if (inited) await getSignProxy().setAuthToken(authToken)
 }
 
 export async function preflightSign(
   logger: PreflightLogger = console,
 ): Promise<string | null> {
+  if (customSign) return customSign.preflight()
   if (!inited) return 'sign not initialized'
 
   let reason: string | null
@@ -146,7 +161,7 @@ export async function requestSign(
   }
 
   try {
-    const r = await getSignProxy().signRequest({
+    const args = {
       cmd,
       bodyHex: src.toString('hex'),
       seq,
@@ -157,7 +172,10 @@ export async function requestSign(
         ? Buffer.from(protocolToken12B, 'utf-8').toString('hex')
         : '',
       device32Hex,
-    })
+    }
+    const r = customSign
+      ? await customSign.sign(args)
+      : await getSignProxy().signRequest(args)
     if (isDebugEnabled()) {
       logger.debug(
         `[sign resp] ${cmd} seq=${seq} sign=${r.sign.length}B hex=%h token=${r.token.length}B hex=%h extra=${r.extra.length}B hex=%h`,
@@ -222,6 +240,7 @@ let warnedStaleLinuxNode = false
 async function acquireLinuxSignToken(uin: number, qua: string): Promise<{ token: string; ttlSecs: number }> {
   const proxy = getSignProxy()
   if (typeof proxy.getLinuxSAToken !== 'function') {
+    if (customSign) throw new Error('Custom Linux signing requires getLinuxSAToken; manager fallback is disabled')
     if (!warnedStaleLinuxNode) {
       warnedStaleLinuxNode = true
       logger.warn('[SignToken] sign-proxy .node 过旧 (缺 getLinuxSAToken), 暂退回经 manager 取 token; 请重新 build 并 sync-to-bot')
@@ -297,9 +316,10 @@ export async function signLinuxXwidBurst(args: {
   cmd: string; bodyHex: string; seq: number; guidHex: string; qua: string; uin: number; protocolTokenHex: string
 }, count: number): Promise<SignResult[] | null> {
   if (!inited || count <= 0) return null
-  const proxy = getSignProxy()
-  if (typeof proxy.signXwidBurst !== 'function') return null
   try {
+    if (customSign) return await customSign.signBatch(args, count)
+    const proxy = getSignProxy()
+    if (typeof proxy.signXwidBurst !== 'function') return null
     const arr = await proxy.signXwidBurst(args, count)
     return arr.map((r) => ({ sign: r.sign, token: r.token, extra: r.extra }))
   } catch (e) {
@@ -430,6 +450,10 @@ async function acquireMacosA2Token(qua: string, esk: MacosEskState): Promise<{ t
  * 重录", 不崩进程。不依赖 sign init (SignProxy 那侧临时建 client), 登录前也能用。
  */
 export async function validateAuthToken(token: string): Promise<'valid' | 'invalid' | number | Error> {
+  if (customSign) {
+    const reason = await customSign.preflight()
+    return reason ? new Error(reason) : 'valid'
+  }
   const t = token.trim()
   if (!t) return 'invalid'
   const proxy = getSignProxy()
