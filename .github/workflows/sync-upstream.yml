@@ -1,0 +1,55 @@
+name: Sync upstream
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream-main
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'RealSeek/LuckyLilliaBot'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Merge upstream while preserving local changes
+        id: merge
+        shell: bash
+        run: |
+          set -euo pipefail
+          git remote add upstream https://github.com/LLOneBot/LuckyLilliaBot.git
+          git fetch --no-tags upstream main
+          if git merge-base --is-ancestor upstream/main HEAD; then
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            echo 'Already up to date with upstream/main.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git merge --no-edit upstream/main; then
+            git merge --abort
+            echo '::error::Upstream merge conflicts with fork changes. Resolve on main; no update was pushed.'
+            exit 1
+          fi
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+
+      - name: Check custom signing HTTP interface
+        run: npm run test:sign-http
+
+      - name: Push merged main
+        if: steps.merge.outputs.changed == 'true'
+        run: git push origin HEAD:main

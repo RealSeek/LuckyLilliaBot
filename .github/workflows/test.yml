@@ -28,9 +28,6 @@ jobs:
       - name: Run unit tests
         run: npm run test:unit
 
-      - name: Run HTTP signing tests
-        run: npm run test:sign-http
-
       - name: Run WebUI tests
         run: npm run test:webui
 
