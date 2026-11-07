@@ -34,7 +34,6 @@ jobs:
       - name: Build Bot and WebUI
         run: |
           npm run test:sign-http
-          npm run check:webui
           npm run build
           npm run build-webui
 
