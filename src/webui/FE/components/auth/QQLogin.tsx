@@ -4,6 +4,7 @@ import { ArrowDown, RefreshCw, X, Loader2 } from 'lucide-react';
 import { apiFetch } from '../../utils/api';
 import { SelfInfo } from '../../types';
 import { showToast } from '../common';
+import SigningConfig from '../config/SigningConfig';
 
 // Vite define 注入: dev 模式下 Vite 代理指向的后端端口 (见 FE vite.config.ts)
 declare const __WEBUI_DEV_PORT__: string;
@@ -301,6 +302,10 @@ const QQLogin: React.FC<QQLoginProps> = ({ onLoginSuccess }) => {
             {authLoginError}
           </div>
         )}
+        <details className="text-left mb-5 max-w-md">
+          <summary className="cursor-pointer text-pink-500 text-sm">签名服务设置</summary>
+          <div className="mt-3"><SigningConfig /></div>
+        </details>
         {/* Quick Login Mode */}
         {loginMode === 'quick' && (
           <div className="flex flex-col items-center gap-6">

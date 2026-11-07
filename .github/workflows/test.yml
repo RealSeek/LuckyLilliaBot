@@ -31,6 +31,21 @@ jobs:
       - name: Run WebUI tests
         run: npm run test:webui
 
+      - name: Build Bot and WebUI
+        run: |
+          npm run test:sign-http
+          npm run check:webui
+          npm run build
+          npm run build-webui
+
+      - name: Upload tested Bot build
+        if: github.event_name == 'push'
+        uses: actions/upload-artifact@v4
+        with:
+          name: tested-bot-dist
+          path: dist/
+          retention-days: 7
+
   e2e-test:
     name: E2E Tests
     runs-on: [self-hosted, llbot-test]

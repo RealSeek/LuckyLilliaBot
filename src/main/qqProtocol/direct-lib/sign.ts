@@ -5,6 +5,7 @@ import { loadMachineGuidSync } from './machineGuid'
 import { device32FromGuid } from './watch/device32'
 import { getMacosDevice } from './macosDevice'
 import { HttpSignClient } from './httpSign'
+import { SigningConfig } from './signingConfig'
 import {
   getSignProxy,
   type RelayPacket,
@@ -12,9 +13,10 @@ import {
 } from './sign-proxy'
 
 const logger = getLogger('sign')
-import { authTokenStatus } from '@/common/globalVars'
+import { authTokenStatus, DATA_DIR } from '@/common/globalVars'
 
-const signUrl = process.env.LLBOT_SIGN_URL?.trim()
+export const signingConfig = new SigningConfig(DATA_DIR, process.env.LLBOT_SIGN_URL)
+const signUrl = signingConfig.activeUrl
 export const customSign = signUrl ? new HttpSignClient(signUrl) : null
 if (customSign && getProtocol() !== 'linux') {
   throw new Error('LLBOT_SIGN_URL currently supports only the Linux QQ protocol')

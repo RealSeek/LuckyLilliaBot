@@ -5,7 +5,7 @@ const h = vi.hoisted(() => ({
   proxy: {} as Record<string, unknown>,
   authTokenStatus: { hasToken: false, validation: 'idle', message: '', loginError: '' },
 }))
-vi.mock('@/common/globalVars', () => ({ authTokenStatus: h.authTokenStatus, selfInfo: { online: false } }))
+vi.mock('@/common/globalVars', () => ({ DATA_DIR: '/unused', authTokenStatus: h.authTokenStatus, selfInfo: { online: false } }))
 vi.mock('@/common/logger', () => ({
   getLogger: () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() }),
   isDebugEnabled: () => false,
@@ -20,7 +20,7 @@ vi.mock('@/main/qqProtocol/direct-lib/macosDevice', () => ({ getMacosDevice: vi.
 vi.mock('@/main/config', () => ({
   authTokenUtil: { getPath: () => '/unused/auth_token.txt', reload: vi.fn(() => '') },
 }))
-vi.mock('node:fs', () => ({ watchFile: vi.fn() }))
+vi.mock('node:fs', () => ({ watchFile: vi.fn(), existsSync: () => false }))
 
 const args = {
   cmd: 'wtlogin.login', bodyHex: '01020304', seq: 10001,

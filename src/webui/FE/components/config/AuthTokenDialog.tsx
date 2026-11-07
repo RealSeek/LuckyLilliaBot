@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, KeyRound, ExternalLink, Loader2 } from 'lucide-react';
 import { apiFetch } from '../../utils/api';
+import SigningConfig from './SigningConfig';
 
 interface AuthTokenDialogProps {
   visible: boolean;
@@ -31,6 +32,7 @@ const AuthTokenDialog: React.FC<AuthTokenDialogProps> = ({ visible, reason, auth
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [statusText, setStatusText] = useState('');
+  const [configureSigning, setConfigureSigning] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const mountedRef = useRef(true);
 
@@ -148,6 +150,17 @@ const AuthTokenDialog: React.FC<AuthTokenDialogProps> = ({ visible, reason, auth
 
   if (!visible) return null;
 
+  if (configureSigning) {
+    return (
+      <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto" style={{ zIndex: 9100 }}>
+        <div className="glass glass-thick r-window glass-pop w-full max-w-lg p-4 max-h-[90vh] overflow-y-auto">
+          <button type="button" onClick={() => setConfigureSigning(false)} className="text-sm text-pink-500 mb-3">返回 Auth Token 设置</button>
+          <SigningConfig />
+        </div>
+      </div>
+    );
+  }
+
   const title = reason === 'invalid' ? 'Auth Token 无效，请重新录入' : '请录入 Auth Token';
 
   return (
@@ -222,6 +235,7 @@ const AuthTokenDialog: React.FC<AuthTokenDialogProps> = ({ visible, reason, auth
 
         {/* Footer - 无取消按钮 (强制录入) */}
         <div className="flex items-center justify-end gap-3 p-6 hairline-t">
+          <button type="button" onClick={() => setConfigureSigning(true)} disabled={submitting} className="text-sm text-pink-500 mr-auto">使用自定义签名服务</button>
           <button
             onClick={handleConfirm}
             disabled={submitting || !token.trim()}

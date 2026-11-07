@@ -1,5 +1,6 @@
 export { createConfigRoutes } from './config'
 export { createAuthTokenRoutes } from './authToken'
+export { createSigningRoutes } from './signing'
 export { createDashboardRoutes } from './dashboard'
 export { createLoginRoutes } from './login'
 export { createLogsRoutes } from './logs'

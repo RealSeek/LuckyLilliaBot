@@ -174,7 +174,7 @@ function App() {
           if (d.applicable && (!d.hasToken || d.validation === 'invalid')) {
             setAuthTokenReason(d.validation === 'invalid' ? 'invalid' : 'missing');
             setShowAuthTokenDialog(true);
-          } else if (d.validation === 'valid') {
+          } else if (!d.applicable || d.validation === 'valid') {
             // 自愈/登录中: 关掉弹框露出二维码. validating/error 不动 (交给对话框自身轮询/QQLogin 横幅),
             // 避免把用户正在提交的弹框中途关掉.
             setShowAuthTokenDialog(false);

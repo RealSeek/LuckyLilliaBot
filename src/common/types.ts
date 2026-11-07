@@ -159,3 +159,11 @@ export interface FileCache {
   /** 图片专用：原始 URL 路径（不含 rkey），获取时通过 getImageUrl 拼新鲜 rkey */
   originImageUrl?: string
 }
+export interface SigningSettings {
+  /** Saved base URL; an empty value selects the built-in signing service. */
+  url: string
+  activeUrl: string
+  source: 'file' | 'environment' | 'default'
+  restartRequired: boolean
+  supported: boolean
+}

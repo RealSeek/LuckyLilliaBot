@@ -3,6 +3,7 @@ import { Config, EmailConfig } from '../../types'
 import { Globe, FileText, Trash2, Music, Lock, Clock, Shield, Edit, Paperclip, Server } from 'lucide-react'
 import { DurationPicker, HostSelector } from '../common'
 import EmailConfigSection from './EmailConfigSection'
+import SigningConfig from './SigningConfig'
 
 interface OtherConfigProps {
   config: Config;
@@ -47,6 +48,7 @@ const OtherConfig: React.FC<OtherConfigProps> = ({ config, emailConfig, onChange
 
   return (
     <div className='space-y-6'>
+      <SigningConfig />
       {/* WebUI 服务配置 */}
       <div className='card p-6 relative z-[100]'>
         <div className='flex items-center gap-3 mb-6'>

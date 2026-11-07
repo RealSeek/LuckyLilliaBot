@@ -11,6 +11,7 @@ import { serializeResult } from './utils'
 import {
   createConfigRoutes,
   createAuthTokenRoutes,
+  createSigningRoutes,
   createDashboardRoutes,
   createLoginRoutes,
   createLogsRoutes,
@@ -118,6 +119,7 @@ export class WebuiServer extends Service {
     // 注册路由
     this.app.route('/api', createConfigRoutes(ctx))
     this.app.route('/api', createAuthTokenRoutes())
+    this.app.route('/api', createSigningRoutes())
     this.app.route('/api', createLoginRoutes(ctx))
     this.app.route('/api', createDashboardRoutes(ctx))
     this.app.route('/api', createLogsRoutes(ctx))
