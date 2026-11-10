@@ -4,11 +4,8 @@
 <div align="center">
   <img src="./logo.jpg" width="200" alt="Logo" />
   <p><strong>Lucky Lillia Bot</strong></p>
-  <p>OneBot 11, Satori, Milky Server</p>
 </div>
 
-## Document
-<https://luckylillia.com>
 
 自部署签名服务：支持在 WebUI 登录页或「其他配置」中配置，也可通过 `LLBOT_SIGN_URL` 设置默认值。首版支持 Linux QQ 协议，详见[接口与部署说明](doc/custom-sign-server.md)。
 
